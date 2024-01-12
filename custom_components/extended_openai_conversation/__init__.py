@@ -28,6 +28,9 @@ from homeassistant.exceptions import (
     ServiceNotFound,
 )
 
+from homeassistant.auth.models import User
+from homeassistant.auth.permissions.const import POLICY_READ, POLICY_CONTROL, POLICY_EDIT
+
 from homeassistant.helpers import (
     config_validation as cv,
     intent,
@@ -336,9 +339,50 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
                 try:
                     service_call = json.loads(segment)
                     service = service_call.pop("service")
+                    service_domain = service.split(".")[0]
                     if not service or not service_call:
                         _LOGGER.info('Missing information')
                         continue
+                    user = await self.hass.auth.async_get_user(user_input.context.user_id)
+                    entities_to_authorize = []
+                    if 'entity_id' in service_call.keys():
+                        entities_to_authorize = [service_call['entity_id']]
+                    if 'device_id' in service_call.keys():
+                        device_id = service_call['device_id']
+                        entity_registry = self.hass.helpers.entity_registry.async_get(self.hass)
+                        for entity_id, entity_entry in entity_registry.entities.items():
+                            if entity_entry and entity_entry.device_id == device_id:
+                                entity_domain = entity.entity_id.split('.')[0]
+                                if service_domain == entity_domain:
+                                    entities_to_authorize.append(entity.entity_id)
+                    if 'area_id' in service_call.keys():
+                            entity_registry = self.hass.helpers.entity_registry.async_get(self.hass)
+                            area_id = service_call['area_id']
+                            device_registry = self.hass.helpers.device_registry.async_get(self.hass)
+                            devices_in_area = [
+                                device.id for device in device_registry.devices.values()
+                                if device.area_id == area_id
+                            ]
+                            for device_id in devices_in_area:
+                                for entity_id, entity_entry in entity_registry.entities.items():
+                                    if entity_entry and entity_entry.device_id == device_id:
+                                        entity_domain = entity_id.split('.')[0]
+                                        if service_domain == entity_domain:
+                                            entities_to_authorize.append(entity_id)
+
+                    for entity_id in entities_to_authorize:
+                        if not user.permissions.check_entity(entity_id, POLICY_CONTROL):
+                            # spice up the unauthorized text by making the LLM write it!
+                            response: ChatCompletion = await self.client.chat.completions.create(
+                                model=model,
+                                messages=[{"role": "user", "content": f"Rewrite this sentence in GlaDOS's personality. Do not include ANYTHING else. Do not include an explanation. Just write a sentence or two in GlaDOS's personality: You are not authorized to perform this task, {user.name}. What are you trying to do?"}],
+                                max_tokens=max_tokens,
+                                top_p=top_p,
+                                temperature=temperature
+                            )
+                            choice: Choice = response.choices[0]
+                            message = choice.message
+                            return [], message
                     await self.hass.services.async_call(
                         service.split(".")[0],
                         service.split(".")[1],
