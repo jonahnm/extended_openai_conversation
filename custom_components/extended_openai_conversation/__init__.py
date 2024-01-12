@@ -5,6 +5,7 @@ import logging
 from typing import Literal
 import json
 import yaml
+import re
 
 from openai import AsyncOpenAI, AsyncAzureOpenAI
 from openai.types.chat.chat_completion import (
@@ -191,7 +192,7 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
         messages.append(user_message)
 
         try:
-            response = await self.query(user_input, messages, exposed_entities, 0)
+            services_called, response = await self.query(user_input, messages, exposed_entities, 0)
         except OpenAIError as err:
             _LOGGER.error(err)
             intent_response = intent.IntentResponse(language=user_input.language)
@@ -215,6 +216,10 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
 
         messages.append(response.model_dump(exclude_none=True))
         self.history[conversation_id] = messages
+        
+        if len(services_called) > 0:
+            response.content = response.content + ' \n\nService executed successfully.'
+            _LOGGER.info(yaml.dump(services_called))
 
         intent_response = intent.IntentResponse(language=user_input.language)
         intent_response.async_set_speech(response.content)
@@ -316,11 +321,70 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
         _LOGGER.info("Response %s", response)
         choice: Choice = response.choices[0]
         message = choice.message
+        services_called = []
         if choice.finish_reason == "function_call":
             message = await self.execute_function_call(
                 user_input, messages, message, exposed_entities, n_requests + 1
             )
-        return message
+
+        # the LLM likes returning backslashes for some reason
+        message.content = message.content.replace('\\', '')
+
+        if '$ActionRequired' in message.content:
+            service_execution_failed = False
+            for segment in self.extract_json_objects(message.content):
+                try:
+                    service_call = json.loads(segment)
+                    service = service_call.pop("service")
+                    if not service or not service_call:
+                        _LOGGER.info('Missing information')
+                        continue
+                    await self.hass.services.async_call(
+                        service.split(".")[0],
+                        service.split(".")[1],
+                        service_call,
+                        blocking=True)
+                    service_call['service'] = service
+                    services_called.append(yaml.dump(service_call))
+                except:
+                    service_execution_failed = True
+            if service_execution_failed:
+                message.content = message.content + '\n\n An error occurred while executing requested service.'
+                _LOGGER.warning(f'Error executing {segment}\n\nPrompt: {message.content}')
+
+        # remove the JSON data
+        message.content = self.remove_json_objects(message.content)
+
+        # remove LLM junk I create as part of the prompt
+        message.content = message.content.replace('$ActionRequired', '')
+        message.content = message.content.replace('$NoActionRequired', '')
+
+        # remove ugly trailing whitespace
+        message.content = message.content.strip()
+
+        return services_called, message
+
+    def extract_json_objects(self, text):
+        json_pattern = r'\{.*?\}'
+
+        potential_jsons = re.findall(json_pattern, text)
+
+        valid_jsons = []
+        for potential_json in potential_jsons:
+            try:
+                # Attempt to parse the JSON string
+                valid_json = json.loads(potential_json)
+                valid_jsons.append(potential_json)
+            except json.JSONDecodeError:
+                # If it's not a valid JSON, ignore it
+                continue
+
+        return valid_jsons
+
+    def remove_json_objects(self, text):
+        json_pattern = r'\{.*?\}'
+        text_without_json = re.sub(json_pattern, '', text)
+        return text_without_json
 
     def execute_function_call(
         self,
@@ -373,4 +437,5 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
                 "content": str(result),
             }
         )
-        return await self.query(user_input, messages, exposed_entities, n_requests)
+        services_called, result = await self.query(user_input, messages, exposed_entities, n_requests)
+        return result
