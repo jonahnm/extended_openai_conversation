@@ -29,6 +29,7 @@
                     "max_function_calls_per_conversation": "Maksymalna ilość wywołań funkcji na rozmowę",
                     "functions": "Funkcje",
                     "attach_username": "Dodaj nazwę użytkownika do wiadomości",
+                    "attach_username_to_prompt": "Dołącz nazwę użytkownika do tekstu wiadomości",
                     "model_key": "Klucz modelu"
                 }
             }

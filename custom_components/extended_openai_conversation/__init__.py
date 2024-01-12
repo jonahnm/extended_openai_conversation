@@ -36,6 +36,7 @@ from homeassistant.helpers import (
 
 from .const import (
     CONF_ATTACH_USERNAME,
+    CONF_ATTACH_USERNAME_TO_PROMPT,
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
@@ -47,6 +48,7 @@ from .const import (
     CONF_API_VERSION,
     CONF_SKIP_AUTHENTICATION,
     DEFAULT_ATTACH_USERNAME,
+    DEFAULT_ATTACH_USERNAME_TO_PROMPT,
     DEFAULT_CHAT_MODEL,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
@@ -163,7 +165,12 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
             conversation_id = ulid.ulid()
             user_input.conversation_id = conversation_id
             try:
+                user = await self.hass.auth.async_get_user(user_input.context.user_id)
                 prompt = self._async_generate_prompt(raw_prompt, exposed_entities)
+                if self.entry.options.get(CONF_ATTACH_USERNAME_TO_PROMPT, DEFAULT_ATTACH_USERNAME_TO_PROMPT):
+                    if user is not None and user.name is not None:
+                        if self.entry.options.get(CONF_ATTACH_USERNAME_TO_PROMPT, DEFAULT_ATTACH_USERNAME_TO_PROMPT):
+                            prompt = f"User's name: {user.name}\n" + prompt
             except TemplateError as err:
                 _LOGGER.error("Error rendering prompt: %s", err)
                 intent_response = intent.IntentResponse(language=user_input.language)
