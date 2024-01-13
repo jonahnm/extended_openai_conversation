@@ -340,6 +340,11 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
                     service_call = json.loads(segment)
                     service = service_call.pop("service")
                     service_domain = service.split(".")[0]
+                    # handle scripts specially
+                    if service.split(".")[0] == 'script':
+                        script_entity_id = service
+                        service_call = {"entity_id": script_entity_id}
+                        service = "script.turn_on"
                     if not service or not service_call:
                         _LOGGER.info('Missing information')
                         continue
