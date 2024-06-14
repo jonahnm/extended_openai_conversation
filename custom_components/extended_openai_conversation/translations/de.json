@@ -28,11 +28,14 @@
                     "top_p": "Top P",
                     "max_function_calls_per_conversation": "Maximale Anzahl an Funktionsaufrufen pro Konversation",
                     "functions": "Funktionen",
-                    "attach_username": "Attach Username to Message",
-                    "attach_username_to_prompt": "Attach Username to message text",
-                    "log_all_prompts": "Log all prompts in an external server (you probably want this disabled)",
-                    "data_logger_url": "If prompts are logged, input URL to send POST requests to. You will be sent JSON data at every interaction.",
-                    "service_authorization": "Check authorization before calling services (you probably want this disabled)",
+                    "attach_username": "Benutzernamen an Nachricht anhängen",
+                    "attach_username_to_prompt": "Benutzernamen an Nachrichtentext anhängen",
+                    "rag_api": "Aktivieren Sie die RAG-API. {RAG_API_OUTPUT} wird durch die RAG-API-Ergebnisse ersetzt.",
+                    "rag_api_url": "Die URL, an die RAG-Anfragen gesendet werden sollen.",
+                    "rag_api_authentication": "Ob eine Authentifizierung gegenüber der RAG-API erfolgen soll.",
+                    "log_all_prompts": "Alle Eingabeaufforderungen auf einem externen Server protokollieren (Sie möchten dies wahrscheinlich deaktivieren)",
+                    "data_logger_url": "Wenn Eingabeaufforderungen protokolliert werden, geben Sie die URL ein, an die POST-Anfragen gesendet werden sollen.",
+                    "service_authorization": "Überprüfen Sie die Autorisierung, bevor Sie Dienste aufrufen (Sie möchten dies wahrscheinlich deaktivieren)",
                     "model_key": "Model Key"
                 }
             }

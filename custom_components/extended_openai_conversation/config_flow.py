@@ -31,6 +31,9 @@ from .helpers import validate_authentication
 from .const import (
     CONF_ATTACH_USERNAME,
     CONF_ATTACH_USERNAME_TO_PROMPT,
+    CONF_RAG_API,
+    CONF_RAG_API_URL,
+    CONF_RAG_API_AUTHENTICATION,
     CONF_SERVICE_AUTHORIZATION,
     CONF_LOG_ALL_PROMPTS,
     CONF_DATA_LOGGER_URL,
@@ -46,6 +49,9 @@ from .const import (
     CONF_SKIP_AUTHENTICATION,
     DEFAULT_ATTACH_USERNAME,
     DEFAULT_ATTACH_USERNAME_TO_PROMPT,
+    DEFAULT_RAG_API,
+    DEFAULT_RAG_API_URL,
+    DEFAULT_RAG_API_AUTHENTICATION,
     DEFAULT_SERVICE_AUTHORIZATION,
     DEFAULT_LOG_ALL_PROMPTS,
     DEFAULT_DATA_LOGGER_URL,
@@ -89,6 +95,9 @@ DEFAULT_OPTIONS = types.MappingProxyType(
         CONF_FUNCTIONS: DEFAULT_CONF_FUNCTIONS_STR,
         CONF_ATTACH_USERNAME: DEFAULT_ATTACH_USERNAME,
         CONF_ATTACH_USERNAME_TO_PROMPT: DEFAULT_ATTACH_USERNAME_TO_PROMPT,
+        CONF_RAG_API: DEFAULT_RAG_API,
+        CONF_RAG_API_URL: DEFAULT_RAG_API_URL,
+        CONF_RAG_API_AUTHENTICATION: DEFAULT_RAG_API_AUTHENTICATION,
         CONF_LOG_ALL_PROMPTS: DEFAULT_LOG_ALL_PROMPTS,
         CONF_DATA_LOGGER_URL: DEFAULT_DATA_LOGGER_URL,
         CONF_SERVICE_AUTHORIZATION: DEFAULT_SERVICE_AUTHORIZATION,
@@ -238,6 +247,23 @@ class OptionsFlow(config_entries.OptionsFlow):
                 CONF_ATTACH_USERNAME_TO_PROMPT,
                 description={"suggested_value": options.get(CONF_ATTACH_USERNAME_TO_PROMPT)},
                 default=DEFAULT_ATTACH_USERNAME_TO_PROMPT,
+            ): BooleanSelector(),
+            vol.Optional(
+                CONF_RAG_API,
+                description={"suggested_value": options.get(CONF_RAG_API)},
+                default=DEFAULT_RAG_API,
+            ): BooleanSelector(),
+            vol.Optional(
+                CONF_RAG_API_URL,
+                description={
+                    "suggested_value": options.get(CONF_RAG_API_URL, DEFAULT_RAG_API_URL)
+                },
+                default=DEFAULT_RAG_API_URL,
+            ): str,
+            vol.Optional(
+                CONF_RAG_API_AUTHENTICATION,
+                description={"suggested_value": options.get(CONF_RAG_API_AUTHENTICATION)},
+                default=DEFAULT_RAG_API_AUTHENTICATION,
             ): BooleanSelector(),
             vol.Optional(
                 CONF_LOG_ALL_PROMPTS,

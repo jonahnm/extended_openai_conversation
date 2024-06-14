@@ -30,8 +30,11 @@
           "functions": "Functions",
           "attach_username": "Attach Username to message",
           "attach_username_to_prompt": "Attach Username to message text",
+          "rag_api": "Enable the RAG API. RAG_API_OUTPUT between two curly braces will be replaced by the RAG API results.",
+          "rag_api_url": "The URL to send RAG requests to.",
+          "rag_api_authentication": "Whether to authenticate to the RAG API.",
           "log_all_prompts": "Log all prompts in an external server (you probably want this disabled)",
-          "data_logger_url": "If prompts are logged, input URL to send POST requests to. You will be sent JSON data at every interaction.",
+          "data_logger_url": "If prompts are logged, input URL to send POST requests to.",
           "service_authorization": "Check authorization before calling services (you probably want this disabled)",
           "model_key": "Model Key"
         }

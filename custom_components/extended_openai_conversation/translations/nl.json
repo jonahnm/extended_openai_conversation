@@ -30,9 +30,12 @@
                     "functions": "Functies",
                     "attach_username": "Gebruikersnaam aan bericht toevoegen",
                     "attach_username_to_prompt": "Voeg gebruikersnaam toe aan berichttekst",
-                    "log_all_prompts": "Log all prompts in an external server (you probably want this disabled)",
-                    "data_logger_url": "If prompts are logged, input URL to send POST requests to. You will be sent JSON data at every interaction.",
-                    "service_authorization": "Check authorization before calling services (you probably want this disabled)",
+                    "rag_api": "Schakel de RAG-API in. {RAG_API_OUTPUT} wordt vervangen door de RAG API-resultaten.",
+                    "rag_api_url": "De URL waarnaar RAG-verzoeken moeten worden verzonden.",
+                    "rag_api_authentication": "Of er moet worden geverifieerd bij de RAG API.",
+                    "log_all_prompts": "Registreer alle prompts op een externe server (u wilt dit waarschijnlijk uitgeschakeld hebben)",
+                    "data_logger_url": "Als er prompts worden geregistreerd, voert u de URL in waarnaar POST-verzoeken moeten worden verzonden.",
+                    "service_authorization": "Controleer de autorisatie voordat u diensten belt (u wilt dit waarschijnlijk uitgeschakeld hebben)",
                     "model_key": "Model Sleutel"
                 }
             }

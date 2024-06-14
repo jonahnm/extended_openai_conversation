@@ -30,9 +30,12 @@
                     "functions": "Funkcje",
                     "attach_username": "Dodaj nazwę użytkownika do wiadomości",
                     "attach_username_to_prompt": "Dołącz nazwę użytkownika do tekstu wiadomości",
-                    "log_all_prompts": "Log all prompts in an external server (you probably want this disabled)",
-                    "data_logger_url": "If prompts are logged, input URL to send POST requests to. You will be sent JSON data at every interaction.",
-                    "service_authorization": "Check authorization before calling services (you probably want this disabled)",
+                    "rag_api": "Włącz interfejs API RAG. {RAG_API_OUTPUT} zostanie zastąpiony wynikami RAG API.",
+                    "rag_api_url": "Adres URL, pod który mają być wysyłane żądania RAG.",
+                    "rag_api_authentication": "Określa, czy uwierzytelniać się w interfejsie API RAG. Przeczytaj README przed włączeniem.",
+                    "log_all_prompts": "Rejestruj wszystkie monity na serwerze zewnętrznym (prawdopodobnie chcesz to wyłączyć)",
+                    "data_logger_url": "Jeśli monity są rejestrowane, wprowadź adres URL, na który mają być wysyłane żądania POST.",
+                    "service_authorization": "Sprawdź autoryzację przed zadzwonieniem do usług (prawdopodobnie chcesz, aby ta funkcja była wyłączona)",
                     "model_key": "Klucz modelu"
                 }
             }

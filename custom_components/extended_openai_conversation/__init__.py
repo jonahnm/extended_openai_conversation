@@ -38,12 +38,15 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 
-import http.client
-import urllib.parse
+import httpx
+import yaml
 
 from .const import (
     CONF_ATTACH_USERNAME,
     CONF_ATTACH_USERNAME_TO_PROMPT,
+    CONF_RAG_API,
+    CONF_RAG_API_URL,
+    CONF_RAG_API_AUTHENTICATION,
     CONF_LOG_ALL_PROMPTS,
     CONF_DATA_LOGGER_URL,
     CONF_CHAT_MODEL,
@@ -59,6 +62,9 @@ from .const import (
     CONF_SERVICE_AUTHORIZATION,
     DEFAULT_ATTACH_USERNAME,
     DEFAULT_ATTACH_USERNAME_TO_PROMPT,
+    DEFAULT_RAG_API,
+    DEFAULT_RAG_API_URL,
+    DEFAULT_RAG_API_AUTHENTICATION,
     DEFAULT_LOG_ALL_PROMPTS,
     DEFAULT_CHAT_MODEL,
     DEFAULT_MAX_TOKENS,
@@ -179,10 +185,14 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
             try:
                 user = await self.hass.auth.async_get_user(user_input.context.user_id)
                 prompt = self._async_generate_prompt(raw_prompt, exposed_entities)
+                if self.entry.options.get(CONF_RAG_API, DEFAULT_RAG_API):
+                    rag_api_response = await self.call_rag_api(user_input.text, user.name)
+                    prompt = prompt.replace('{RAG_API_OUTPUT}', rag_api_response)
                 if self.entry.options.get(CONF_ATTACH_USERNAME_TO_PROMPT, DEFAULT_ATTACH_USERNAME_TO_PROMPT):
                     if user is not None and user.name is not None:
                         if self.entry.options.get(CONF_ATTACH_USERNAME_TO_PROMPT, DEFAULT_ATTACH_USERNAME_TO_PROMPT):
                             prompt = f"User's name: {user.name}\n" + prompt
+                _LOGGER.warning(f'DEBUG PROMPT REMOVE ME LATER {prompt}')
             except TemplateError as err:
                 _LOGGER.error("Error rendering prompt: %s", err)
                 intent_response = intent.IntentResponse(language=user_input.language)
@@ -409,9 +419,9 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
                 message.content = message.content + '\n\n An error occurred while executing requested service.'
                 _LOGGER.warning(f'Error executing {segment}\n\nPrompt: {message.content}\n\nException: {exception_traceback}')
 
-            if self.entry.options.get(CONF_ATTACH_USERNAME_TO_PROMPT, DEFAULT_ATTACH_USERNAME_TO_PROMPT):
+            if self.entry.options.get(CONF_LOG_ALL_PROMPTS, DEFAULT_LOG_ALL_PROMPTS):
                 # send prompt and response to data logger
-                self.hass.async_add_executor_job(self.send_to_data_logger, messages, message.content)
+                await self.send_to_data_logger(messages, message.content)
 
         # remove the JSON data
         message.content = self.remove_json_objects(message.content)
@@ -425,35 +435,55 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
 
         return services_called, message
 
-    def send_to_data_logger(self, messages, response):
-        # TODO ADD URL!
-        url = self.entry.options.get(CONF_ATTACH_USERNAME_TO_PROMPT, DEFAULT_ATTACH_USERNAME_TO_PROMPT)
+
+    async def call_rag_api(self, prompt, user_name):
+        url = self.entry.options.get(CONF_RAG_API_URL)
+        if not url:
+            _LOGGER.warning('RAG API was requested, but the RAG API URL was not set!')
+            return ""
+
         data = {
-            "messages": messages,
-            "response": response
+            "user_prompt": prompt
         }
+        async with httpx.AsyncClient() as client:
 
-        payload = json.dumps(data).encode('utf-8')
-        parsed_url = urllib.parse.urlparse(url)
-        scheme = parsed_url.scheme
-        netloc = parsed_url.netloc
-        path = parsed_url.path
+            headers = {
+                'Content-Type': 'application/json'
+            }
 
-        if scheme == 'http':
-            conn = http.client.HTTPConnection(netloc)
-        elif scheme == 'https':
-            conn = http.client.HTTPSConnection(netloc)
+            if self.entry.options.get(CONF_RAG_API_AUTHENTICATION, DEFAULT_RAG_API_AUTHENTICATION):
+                secrets_file = open("/config/secrets.yaml")
+                secrets = yaml.safe_load(secrets_file)
+                if 'rag_api_tokens' not in secrets:
+                    _LOGGER.warning('RAG API authentication was requested, but the rag_api_tokens secret could not be found!')
+                    return ""
+                if user_name not in secrets['rag_api_tokens']:
+                    _LOGGER.warning('RAG API authentication was requested, but the user name could not be found in rag_api_tokens!')
+                    return ""
+                secret_token = secrets['rag_api_tokens'][user_name]
+                headers['Authorization'] = f'Bearer {secret_token}'
+
+            response = await client.post(url, headers=headers, json=data)
+
+            if response.status_code == httpx.codes.OK:
+                response_data = response.json()
+                _LOGGER.warning(f'LLM API RESPONSE {response_data}')
+                return response_data.get("prompt", "")
+            else:
+                _LOGGER.warning(f'Bad response code {response.status_code} from the RAG API!')
+                return ""
+
+    async def send_to_data_logger(self, messages, response):
+        url = self.entry.options.get(CONF_DATA_LOGGER_URL)
+        if url:
+            data = {
+                "messages": messages,
+                "response": response
+            }
+            async with httpx.AsyncClient() as client:
+                await client.post(url, json=data)
         else:
-            raise ValueError("Unsupported scheme")
-
-        headers = {
-            'Content-Type': 'application/json',
-            'Content-Length': len(payload)
-        }
-        conn.request('POST', path, payload, headers)
-        response = conn.getresponse()
-        conn.close()
-
+            _LOGGER.warning(f'Data logging requested but the URL is not valid!')
 
     def extract_json_objects(self, text):
         json_pattern = r'\{.*?\}'
