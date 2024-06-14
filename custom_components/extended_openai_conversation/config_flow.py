@@ -31,6 +31,9 @@ from .helpers import validate_authentication
 from .const import (
     CONF_ATTACH_USERNAME,
     CONF_ATTACH_USERNAME_TO_PROMPT,
+    CONF_SERVICE_AUTHORIZATION,
+    CONF_LOG_ALL_PROMPTS,
+    CONF_DATA_LOGGER_URL,
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
@@ -43,6 +46,9 @@ from .const import (
     CONF_SKIP_AUTHENTICATION,
     DEFAULT_ATTACH_USERNAME,
     DEFAULT_ATTACH_USERNAME_TO_PROMPT,
+    DEFAULT_SERVICE_AUTHORIZATION,
+    DEFAULT_LOG_ALL_PROMPTS,
+    DEFAULT_DATA_LOGGER_URL,
     DEFAULT_CHAT_MODEL,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
@@ -83,6 +89,9 @@ DEFAULT_OPTIONS = types.MappingProxyType(
         CONF_FUNCTIONS: DEFAULT_CONF_FUNCTIONS_STR,
         CONF_ATTACH_USERNAME: DEFAULT_ATTACH_USERNAME,
         CONF_ATTACH_USERNAME_TO_PROMPT: DEFAULT_ATTACH_USERNAME_TO_PROMPT,
+        CONF_LOG_ALL_PROMPTS: DEFAULT_LOG_ALL_PROMPTS,
+        CONF_DATA_LOGGER_URL: DEFAULT_DATA_LOGGER_URL,
+        CONF_SERVICE_AUTHORIZATION: DEFAULT_SERVICE_AUTHORIZATION,
     }
 )
 
@@ -229,5 +238,22 @@ class OptionsFlow(config_entries.OptionsFlow):
                 CONF_ATTACH_USERNAME_TO_PROMPT,
                 description={"suggested_value": options.get(CONF_ATTACH_USERNAME_TO_PROMPT)},
                 default=DEFAULT_ATTACH_USERNAME_TO_PROMPT,
+            ): BooleanSelector(),
+            vol.Optional(
+                CONF_LOG_ALL_PROMPTS,
+                description={"suggested_value": options.get(CONF_LOG_ALL_PROMPTS)},
+                default=DEFAULT_LOG_ALL_PROMPTS,
+            ): BooleanSelector(),
+            vol.Optional(
+                CONF_DATA_LOGGER_URL,
+                description={
+                    "suggested_value": options.get(CONF_DATA_LOGGER_URL, DEFAULT_DATA_LOGGER_URL)
+                },
+                default=DEFAULT_DATA_LOGGER_URL,
+            ): str,
+            vol.Optional(
+                CONF_SERVICE_AUTHORIZATION,
+                description={"suggested_value": options.get(CONF_SERVICE_AUTHORIZATION)},
+                default=DEFAULT_SERVICE_AUTHORIZATION,
             ): BooleanSelector(),
         }

@@ -30,6 +30,9 @@
                     "functions": "Funkcje",
                     "attach_username": "Dodaj nazwę użytkownika do wiadomości",
                     "attach_username_to_prompt": "Dołącz nazwę użytkownika do tekstu wiadomości",
+                    "log_all_prompts": "Log all prompts in an external server (you probably want this disabled)",
+                    "data_logger_url": "If prompts are logged, input URL to send POST requests to. You will be sent JSON data at every interaction.",
+                    "service_authorization": "Check authorization before calling services (you probably want this disabled)",
                     "model_key": "Klucz modelu"
                 }
             }

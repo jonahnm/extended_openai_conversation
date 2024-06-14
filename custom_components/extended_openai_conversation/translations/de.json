@@ -30,6 +30,9 @@
                     "functions": "Funktionen",
                     "attach_username": "Attach Username to Message",
                     "attach_username_to_prompt": "Attach Username to message text",
+                    "log_all_prompts": "Log all prompts in an external server (you probably want this disabled)",
+                    "data_logger_url": "If prompts are logged, input URL to send POST requests to. You will be sent JSON data at every interaction.",
+                    "service_authorization": "Check authorization before calling services (you probably want this disabled)",
                     "model_key": "Model Key"
                 }
             }
