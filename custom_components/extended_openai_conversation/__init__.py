@@ -192,7 +192,6 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
                     if user is not None and user.name is not None:
                         if self.entry.options.get(CONF_ATTACH_USERNAME_TO_PROMPT, DEFAULT_ATTACH_USERNAME_TO_PROMPT):
                             prompt = f"User's name: {user.name}\n" + prompt
-                _LOGGER.warning(f'DEBUG PROMPT REMOVE ME LATER {prompt}')
             except TemplateError as err:
                 _LOGGER.error("Error rendering prompt: %s", err)
                 intent_response = intent.IntentResponse(language=user_input.language)
@@ -467,7 +466,6 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
 
             if response.status_code == httpx.codes.OK:
                 response_data = response.json()
-                _LOGGER.warning(f'LLM API RESPONSE {response_data}')
                 return response_data.get("prompt", "")
             else:
                 _LOGGER.warning(f'Bad response code {response.status_code} from the RAG API!')
