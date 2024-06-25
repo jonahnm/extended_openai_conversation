@@ -372,13 +372,27 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
                             entity_registry = self.hass.helpers.entity_registry.async_get()
                             for entity_id, entity_entry in entity_registry.entities.items():
                                 if entity_entry and entity_entry.device_id == device_id:
-                                    entity_domain = entity.entity_id.split('.')[0]
+                                    entity_domain = entity_id.split('.')[0]
                                     if service_domain == entity_domain:
-                                        entities_to_authorize.append(entity.entity_id)
+                                        entities_to_authorize.append(entity_id)
+                        areas_to_authorize = []
                         if 'area_id' in service_call.keys():
-                                entity_registry = self.hass.helpers.entity_registry.async_get()
+                                areas_to_authorize.append(service_call['area_id'])
+                        if 'floor_id' in service_call.keys():
+                                area_registry = self.hass.helpers.area_registry.async_get()
+                                floor_id = service_call['floor_id']
+                                areas_in_floor = [
+                                    area.id for area in area_registry.areas.values()
+                                    if area.floor_id == floor_id
+                                ]
+                                for area_id in areas_in_floor:
+                                    areas_to_authorize.append(area_id)
+
+                        if areas_to_authorize:
+                            entity_registry = self.hass.helpers.entity_registry.async_get()
+                            device_registry = self.hass.helpers.device_registry.async_get()
+                            for area_id in areas_to_authorize:
                                 area_id = service_call['area_id']
-                                device_registry = self.hass.helpers.device_registry.async_get()
                                 devices_in_area = [
                                     device.id for device in device_registry.devices.values()
                                     if device.area_id == area_id
@@ -389,7 +403,6 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
                                             entity_domain = entity_id.split('.')[0]
                                             if service_domain == entity_domain:
                                                 entities_to_authorize.append(entity_id)
-
                         for entity_id in entities_to_authorize:
                             if not user.permissions.check_entity(entity_id, POLICY_CONTROL):
                                 # spice up the unauthorized text by making the LLM write it!
