@@ -186,7 +186,7 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
                 user = await self.hass.auth.async_get_user(user_input.context.user_id)
                 prompt = self._async_generate_prompt(raw_prompt, exposed_entities)
                 if self.entry.options.get(CONF_RAG_API, DEFAULT_RAG_API):
-                    rag_api_response = await self.call_rag_api(user_input.text, user.name)
+                    rag_api_response = await self.call_rag_api(user_input.text, "Jonah")
                     prompt = prompt.replace('{RAG_API_OUTPUT}', rag_api_response)
                 if self.entry.options.get(CONF_ATTACH_USERNAME_TO_PROMPT, DEFAULT_ATTACH_USERNAME_TO_PROMPT):
                     if user is not None and user.name is not None:
